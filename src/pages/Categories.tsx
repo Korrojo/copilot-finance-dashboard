@@ -1,15 +1,18 @@
 import { useState, useMemo } from 'react';
-import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertCircle, TrendingUp, TrendingDown, Repeat } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
 import { useBudgets } from '../hooks/useBudgets';
 import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
 import { CategoryPieChart } from '../components/charts/CategoryPieChart';
 import { EditBudgetsModal } from '../components/EditBudgetsModal';
+import { RebalanceBudgetModal } from '../components/RebalanceBudgetModal';
+import { CategorySpendingTrendsChart } from '../components/CategorySpendingTrendsChart';
 
 export function Categories() {
   const { data } = useFinancialData();
   const { budgets, budgetStatuses, totalBudget, totalSpent, addBudget, removeBudget } = useBudgets();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRebalanceModalOpen, setIsRebalanceModalOpen] = useState(false);
 
   const totalCategorySpent = Math.abs(data.category_spending.reduce((sum, cat) => sum + cat.amount, 0));
 
@@ -76,6 +79,32 @@ export function Categories() {
     return 'bg-green-500';
   };
 
+  // Generate mock spending trends data (in real app, would come from API)
+  const spendingTrendsData = useMemo(() => {
+    const months = ['Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025'];
+    return months.map((month, index) => {
+      const dataPoint: { month: string; [key: string]: string | number } = { month };
+      categoriesWithBudgets.slice(0, 5).forEach((cat) => {
+        const baseAmount = cat.spent;
+        const variance = 0.8 + Math.random() * 0.4; // ±20% variance
+        const trend = 1 + (index * 0.05); // Slight upward trend
+        dataPoint[cat.category] = Math.round(baseAmount * variance * trend);
+      });
+      return dataPoint;
+    });
+  }, [categoriesWithBudgets]);
+
+  // Prepare rebalance modal data
+  const rebalanceCategories = useMemo(() => {
+    return categoriesWithBudgets.map((cat) => ({
+      category: cat.category,
+      currentBudget: cat.budget,
+      currentSpending: cat.spent,
+      suggestedBudget: cat.spent * 1.1, // Suggest 10% above current spending
+      averageSpending: cat.spent * 0.95, // Mock 3-month average
+    }));
+  }, [categoriesWithBudgets]);
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -84,12 +113,30 @@ export function Categories() {
           <h1 className="text-3xl font-bold text-white mb-2">Categories</h1>
           <p className="text-gray-400">Budget tracking by category</p>
         </div>
-        <button
-          onClick={() => setIsEditModalOpen(true)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          Edit Budgets
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsRebalanceModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            <Repeat className="w-4 h-4" />
+            Rebalance
+          </button>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Edit Budgets
+          </button>
+        </div>
+      </div>
+
+      {/* Spending Trends Chart */}
+      <div className="bg-[#141824] rounded-xl p-6 border border-gray-800 mb-8">
+        <h3 className="text-lg font-semibold text-white mb-6">Spending Trends</h3>
+        <CategorySpendingTrendsChart
+          data={spendingTrendsData}
+          categories={categoriesWithBudgets.slice(0, 5).map((c) => c.category)}
+        />
       </div>
 
       {/* Summary Cards */}
@@ -286,6 +333,15 @@ export function Categories() {
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveBudgets}
         currentBudgets={budgets.map((b) => ({ category: b.category, amount: b.amount }))}
+      />
+
+      {/* Rebalance Budget Modal */}
+      <RebalanceBudgetModal
+        isOpen={isRebalanceModalOpen}
+        onClose={() => setIsRebalanceModalOpen(false)}
+        onSave={handleSaveBudgets}
+        categories={rebalanceCategories}
+        totalBudget={totalBudget}
       />
     </div>
   );
