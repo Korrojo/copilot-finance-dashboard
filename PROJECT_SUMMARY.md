@@ -3,7 +3,7 @@
 ## Overview
 This project is a modern, feature-rich financial dashboard inspired by Copilot Money, built with React, TypeScript, Vite, and Tailwind CSS. The application provides comprehensive financial tracking, analysis, and management capabilities with a beautiful dark-themed UI.
 
-## Completed Development Phases
+## Completed Development Phases (7-12)
 
 ### **Phase 7: Accounts Management System** ✅
 **Commit:** `312fa08 - feat: Phase 7 - Complete Accounts page with comprehensive features`
@@ -101,6 +101,51 @@ This project is a modern, feature-rich financial dashboard inspired by Copilot M
 - **Holdings:** Individual position cards with sparklines, share counts, gain/loss tracking
 - **Multi-Account:** Support for different account types with aggregated metrics
 - **Investment Types:** Stocks, ETFs, mutual funds, bonds, crypto with color coding
+
+---
+
+### **Phase 11: Advanced Categories & Budgeting** ✅
+**Commit:** `e8359a2 - feat: Phase 11 - Advanced Categories & Budgeting enhancements`
+
+**Features Implemented:**
+- Budget rebalance modal with smart suggestions
+- Spending trends visualization (6-month chart)
+- Auto-balance feature based on spending patterns
+- Enhanced budget tracking UI
+- 3-month average spending calculations
+
+**Components Created:**
+- `src/components/RebalanceBudgetModal.tsx` - Interactive budget rebalancing
+- `src/components/CategorySpendingTrendsChart.tsx` - Multi-line trend visualization
+- Updated `src/pages/Categories.tsx` - Integration of new features
+
+**Key Features:**
+- **Budget Rebalance:** Slider-based adjustments, auto-balance, real-time validation
+- **Spending Trends:** 6-month historical view, top 5 categories, interactive tooltips
+- **Smart Suggestions:** Average-based recommendations, proportional distribution
+- **Visual Enhancements:** Color-coded trends, warning indicators, progress tracking
+
+---
+
+### **Phase 12: Enhanced Recurrings & Subscriptions** ✅
+**Commit:** `34beba9 - feat: Phase 12 - Enhanced Recurrings with Calendar View`
+
+**Features Implemented:**
+- Monthly calendar view for recurring payments
+- View toggle (list/calendar modes)
+- Interactive month navigation
+- Daily payment breakdown
+- Visual past-due indicators
+
+**Components Created:**
+- `src/components/RecurringCalendarView.tsx` - Calendar visualization
+- Updated `src/pages/Recurrings.tsx` - View mode integration
+
+**Key Features:**
+- **Calendar View:** Interactive month navigation, daily totals, multi-subscription handling
+- **Visual Indicators:** Today highlighting, past due alerts, payment type coding
+- **Smart Display:** Compact day view, truncation for long names, monthly totals
+- **User Control:** Easy view switching, persistent mode selection, responsive design
 
 ---
 
@@ -293,14 +338,14 @@ copilot-finance-dashboard/
 ## Git History
 
 ### Recent Commits
-1. `7c058e3` - Phase 10: Investments module
-2. `ef3bb5d` - Phase 9: Dashboard improvements
-3. `391ce50` - Phase 8: Transaction detail panel
-4. `312fa08` - Phase 7: Accounts page
-5. `099c5c9` - Phase 6: Recurring transactions
-6. `febf593` - Phase 5: Budget management
-7. `5fa530b` - Phase 4: Enhanced visualizations
-8. `743457a` - Phase 3: Advanced features
+1. `34beba9` - Phase 12: Enhanced Recurrings with Calendar View
+2. `e8359a2` - Phase 11: Advanced Categories & Budgeting
+3. `7c058e3` - Phase 10: Investments module
+4. `ef3bb5d` - Phase 9: Dashboard improvements
+5. `391ce50` - Phase 8: Transaction detail panel
+6. `312fa08` - Phase 7: Accounts page
+7. `099c5c9` - Phase 6: Recurring transactions
+8. `febf593` - Phase 5: Budget management
 
 ---
 
@@ -380,10 +425,10 @@ copilot-finance-dashboard/
 
 This project successfully implements a comprehensive financial dashboard with features matching and in some cases exceeding Copilot Money's functionality. The codebase is well-structured, type-safe, and ready for production deployment or further enhancement.
 
-**Total Development Time:** Phases 7-10 completed in single session
-**Lines of Code Added:** ~3,300+ lines across 11 new files
-**Components Created:** 11 new components
-**Features Delivered:** 4 major feature sets
+**Total Development Time:** Phases 7-12 completed in single session
+**Lines of Code Added:** ~4,600+ lines across 17 new files
+**Components Created:** 17 new components
+**Features Delivered:** 6 major feature sets
 
 The application provides users with powerful tools for managing their finances, tracking investments, and making informed financial decisions through beautiful, intuitive interfaces.
 
