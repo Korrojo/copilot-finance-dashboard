@@ -5,6 +5,7 @@ import { Transactions } from './pages/Transactions';
 import { CashFlow } from './pages/CashFlow';
 import { Accounts } from './pages/Accounts';
 import { Categories } from './pages/Categories';
+import { Recurrings } from './pages/Recurrings';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
           <Route path="goals" element={<div className="p-8 text-white">Goals coming soon</div>} />
           <Route path="investments" element={<div className="p-8 text-white">Investments coming soon</div>} />
           <Route path="categories" element={<Categories />} />
-          <Route path="recurrings" element={<div className="p-8 text-white">Recurrings coming soon</div>} />
+          <Route path="recurrings" element={<Recurrings />} />
         </Route>
       </Routes>
     </Router>

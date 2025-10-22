@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Temporary directories and files
+docs/*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -30,4 +33,4 @@ dist-ssr
 
 # Financial data (for privacy)
 # Uncomment the line below if you want to keep your financial data private
-# src/data/financial_data.json
+src/data/financial_data.json

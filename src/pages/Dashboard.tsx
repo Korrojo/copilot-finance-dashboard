@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
+import { useSubscriptions } from '../hooks/useSubscriptions';
 import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
 import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart';
 import { Sparkline } from '../components/charts/Sparkline';
 import { TimeRangeSelector } from '../components/TimeRangeSelector';
+import { UpcomingBills } from '../components/UpcomingBills';
 
 export function Dashboard() {
   const [timeRange, setTimeRange] = useState('1M');
@@ -18,6 +20,8 @@ export function Dashboard() {
     latestMonthSpending,
     topCategories,
   } = useFinancialData();
+
+  const { upcomingBills } = useSubscriptions();
 
   // Mock sparkline data (in real app, this would come from API based on timeRange)
   const totalSpentSparkline = [45000, 48000, 46000, 50000, 52000, 49000, totalSpent];
@@ -246,20 +250,8 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Transactions to Review */}
-      <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">
-            Transactions to review
-          </h3>
-          <button className="text-blue-400 text-sm hover:text-blue-300">
-            VIEW ALL →
-          </button>
-        </div>
-        <div className="text-center py-12 text-gray-500">
-          No transactions to review
-        </div>
-      </div>
+      {/* Upcoming Bills */}
+      <UpcomingBills bills={upcomingBills} maxItems={5} />
     </div>
   );
 }
