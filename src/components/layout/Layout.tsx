@@ -6,7 +6,9 @@ export function Layout() {
     <div className="flex h-screen bg-[#0a0e1a] overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <Outlet />
+        <div className="page-enter">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
