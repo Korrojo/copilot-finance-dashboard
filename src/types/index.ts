@@ -33,8 +33,8 @@ export interface MonthlySpending {
 export interface MerchantSpending {
   merchant: string;
   amount: number;
-  transaction_count: number;
-  category: string;
+  transaction_count?: number;
+  category?: string;
 }
 
 // Account data
@@ -51,7 +51,7 @@ export interface Account {
 export interface AccountSpending {
   account: string;
   amount: number;
-  percentage: number;
+  percentage?: number;
 }
 
 // Financial data structure

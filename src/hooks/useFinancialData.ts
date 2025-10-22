@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import financialDataRaw from '../data/financial_data.json';
-import { FinancialData } from '../types';
+import type { FinancialData } from '../types';
 
 export function useFinancialData() {
   const data = useMemo(() => financialDataRaw as FinancialData, []);

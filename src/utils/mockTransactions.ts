@@ -1,4 +1,4 @@
-import { Transaction } from '../types';
+import type { Transaction } from '../types';
 
 // Generate mock transactions based on the aggregated data
 export const mockTransactions: Transaction[] = [

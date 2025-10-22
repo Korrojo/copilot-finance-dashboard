@@ -1,8 +1,7 @@
-import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
 import { formatCurrency, formatNumber, formatCompactCurrency } from '../utils/formatCurrency';
 import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart';
-import { CategoryPieChart } from '../components/charts/CategoryPieChart';
 
 export function Dashboard() {
   const {
@@ -21,10 +20,6 @@ export function Dashboard() {
   const budgetUsed = latestMonthSpending;
   const budgetLeft = budgetAmount - budgetUsed;
   const budgetPercentage = Math.min((budgetUsed / budgetAmount) * 100, 100);
-
-  // Mock assets and debt (these would come from actual account balances in real app)
-  const assets = 1430545;
-  const debt = 283756;
 
   return (
     <div className="p-8">

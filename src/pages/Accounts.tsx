@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Settings } from 'lucide-react';
-import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
+import { formatCurrency } from '../utils/formatCurrency';
 
 const accounts = [
   {

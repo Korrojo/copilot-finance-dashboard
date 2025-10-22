@@ -1,5 +1,5 @@
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MonthlySpending } from '../../types';
+import type { MonthlySpending } from '../../types';
 import { formatCompactCurrency } from '../../utils/formatCurrency';
 
 interface MonthlySpendingChartProps {
