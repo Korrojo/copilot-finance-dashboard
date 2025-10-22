@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Transactions } from './pages/Transactions';
 import { CashFlow } from './pages/CashFlow';
 import { Accounts } from './pages/Accounts';
+import { Investments } from './pages/Investments';
 import { Categories } from './pages/Categories';
 import { Recurrings } from './pages/Recurrings';
 
@@ -16,9 +17,9 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="cash-flow" element={<CashFlow />} />
           <Route path="accounts" element={<Accounts />} />
+          <Route path="investments" element={<Investments />} />
           {/* Placeholder routes */}
           <Route path="goals" element={<div className="p-8 text-white">Goals coming soon</div>} />
-          <Route path="investments" element={<div className="p-8 text-white">Investments coming soon</div>} />
           <Route path="categories" element={<Categories />} />
           <Route path="recurrings" element={<Recurrings />} />
         </Route>
