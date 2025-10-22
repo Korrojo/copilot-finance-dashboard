@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Filter, Search, Download, ChevronRight, X } from 'lucide-react';
+import { Filter, Search, Download, ChevronRight } from 'lucide-react';
 import { mockTransactions } from '../utils/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
+import { TransactionDetailPanel } from '../components/TransactionDetailPanel';
 import type { Transaction } from '../types';
 
 const categoryColors: Record<string, string> = {
@@ -340,106 +341,27 @@ export function Transactions() {
 
       {/* Detail Panel (Right Sidebar) */}
       {selectedTransaction && selectedTransactionData && (
-        <div className="w-96 bg-[#141824] border-l border-gray-800 p-6 overflow-y-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Transaction Details</h2>
-            <button
-              onClick={() => setSelectedTransaction(null)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Amount */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-400 mb-1">Amount</p>
-            <p className={`text-3xl font-bold ${
-              selectedTransactionData.amount > 0 ? 'text-green-400' : 'text-white'
-            }`}>
-              {formatCurrency(selectedTransactionData.amount)}
-            </p>
-          </div>
-
-          {/* Details Grid */}
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Merchant</p>
-              <p className="text-white font-medium">{selectedTransactionData.merchant}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Date</p>
-              <p className="text-white">{formatDate(selectedTransactionData.date)}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Category</p>
-              <span
-                className={`inline-block text-sm px-3 py-1 rounded-full ${
-                  categoryColors[selectedTransactionData.category] || 'bg-gray-500'
-                } text-white`}
-              >
-                {selectedTransactionData.category}
-              </span>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Account</p>
-              <p className="text-white">{selectedTransactionData.account}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Status</p>
-              <span className={`inline-block text-sm px-3 py-1 rounded-full ${
-                selectedTransactionData.status === 'posted' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-              }`}>
-                {selectedTransactionData.status.charAt(0).toUpperCase() + selectedTransactionData.status.slice(1)}
-              </span>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 mb-1">Type</p>
-              <p className="text-white capitalize">{selectedTransactionData.type}</p>
-            </div>
-
-            {selectedTransactionData.notes && (
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Notes</p>
-                <p className="text-white">{selectedTransactionData.notes}</p>
-              </div>
-            )}
-
-            {selectedTransactionData.tags && selectedTransactionData.tags.length > 0 && (
-              <div>
-                <p className="text-sm text-gray-400 mb-2">Tags</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedTransactionData.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="mt-8 space-y-2">
-            <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              Edit Transaction
-            </button>
-            <button className="w-full py-2 px-4 bg-[#0a0e1a] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600">
-              Add Note
-            </button>
-            <button className="w-full py-2 px-4 bg-[#0a0e1a] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600">
-              Add Tags
-            </button>
-          </div>
-        </div>
+        <TransactionDetailPanel
+          transaction={selectedTransactionData}
+          allTransactions={mockTransactions}
+          onClose={() => setSelectedTransaction(null)}
+          onEdit={(transaction) => {
+            console.log('Edit transaction:', transaction);
+            // TODO: Implement edit functionality
+          }}
+          onAddNote={(transactionId) => {
+            console.log('Add note to transaction:', transactionId);
+            // TODO: Implement add note functionality
+          }}
+          onAddTags={(transactionId) => {
+            console.log('Add tags to transaction:', transactionId);
+            // TODO: Implement add tags functionality
+          }}
+          onRecurring={(transactionId) => {
+            console.log('Mark as recurring:', transactionId);
+            // TODO: Implement recurring transaction functionality
+          }}
+        />
       )}
     </div>
   );
