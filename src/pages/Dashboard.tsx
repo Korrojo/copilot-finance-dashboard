@@ -1,13 +1,17 @@
-import { ArrowUpRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
-import { formatCurrency, formatNumber, formatCompactCurrency } from '../utils/formatCurrency';
+import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
 import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart';
+import { Sparkline } from '../components/charts/Sparkline';
+import { TimeRangeSelector } from '../components/TimeRangeSelector';
 
 export function Dashboard() {
+  const [timeRange, setTimeRange] = useState('1M');
+
   const {
     data,
     totalSpent,
-    totalTransactions,
     avgTransaction,
     topMerchant,
     primaryAccount,
@@ -15,18 +19,29 @@ export function Dashboard() {
     topCategories,
   } = useFinancialData();
 
+  // Mock sparkline data (in real app, this would come from API based on timeRange)
+  const totalSpentSparkline = [45000, 48000, 46000, 50000, 52000, 49000, totalSpent];
+  const avgTransactionSparkline = [150, 155, 148, 160, 158, 155, avgTransaction];
+
   // Calculate budget-related values (using latest month spending as reference)
   const budgetAmount = 8000; // TODO: Make this configurable
   const budgetUsed = latestMonthSpending;
   const budgetLeft = budgetAmount - budgetUsed;
   const budgetPercentage = Math.min((budgetUsed / budgetAmount) * 100, 100);
 
+  // Comparative metrics
+  const totalSpentChange = 5.2; // +5.2% vs last period
+  const avgTransactionChange = -2.1; // -2.1% vs last period
+
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-gray-400">Your financial overview</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-gray-400">Your financial overview</p>
+        </div>
+        <TimeRangeSelector selectedRange={timeRange} onRangeChange={setTimeRange} />
       </div>
 
       {/* Stats Grid */}
@@ -75,7 +90,7 @@ export function Dashboard() {
         {/* Total Spent Card */}
         <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
           <div className="flex items-start justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <p className="text-gray-400 text-sm mb-1">Total Spent</p>
               <h2 className="text-3xl font-bold text-white">
                 {formatCurrency(totalSpent)}
@@ -85,15 +100,32 @@ export function Dashboard() {
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400">{formatNumber(totalTransactions)} transactions</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm">
+              {totalSpentChange > 0 ? (
+                <TrendingUp className="w-4 h-4 text-red-400" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-green-400" />
+              )}
+              <span className={totalSpentChange > 0 ? 'text-red-400' : 'text-green-400'}>
+                {Math.abs(totalSpentChange)}%
+              </span>
+              <span className="text-gray-500">vs last period</span>
+            </div>
           </div>
+          <Sparkline
+            data={totalSpentSparkline}
+            width={200}
+            height={40}
+            color={totalSpentChange > 0 ? '#f87171' : '#34d399'}
+            fillColor={totalSpentChange > 0 ? 'rgba(248, 113, 113, 0.1)' : 'rgba(52, 211, 153, 0.1)'}
+          />
         </div>
 
         {/* Average Transaction Card */}
         <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
           <div className="flex items-start justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <p className="text-gray-400 text-sm mb-1">Avg Transaction</p>
               <h2 className="text-3xl font-bold text-white">
                 {formatCurrency(avgTransaction)}
@@ -103,9 +135,26 @@ export function Dashboard() {
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400">Per transaction</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm">
+              {avgTransactionChange > 0 ? (
+                <TrendingUp className="w-4 h-4 text-red-400" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-green-400" />
+              )}
+              <span className={avgTransactionChange > 0 ? 'text-red-400' : 'text-green-400'}>
+                {Math.abs(avgTransactionChange)}%
+              </span>
+              <span className="text-gray-500">vs last period</span>
+            </div>
           </div>
+          <Sparkline
+            data={avgTransactionSparkline}
+            width={200}
+            height={40}
+            color={avgTransactionChange > 0 ? '#f87171' : '#34d399'}
+            fillColor={avgTransactionChange > 0 ? 'rgba(248, 113, 113, 0.1)' : 'rgba(52, 211, 153, 0.1)'}
+          />
         </div>
       </div>
 
@@ -157,30 +206,38 @@ export function Dashboard() {
               VIEW ALL →
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {topCategories.map((category, index) => {
               const colors = [
-                'bg-red-500',
-                'bg-blue-500',
-                'bg-yellow-500',
-                'bg-green-500',
-                'bg-purple-500',
+                { bg: 'bg-red-500', border: 'border-red-500' },
+                { bg: 'bg-blue-500', border: 'border-blue-500' },
+                { bg: 'bg-yellow-500', border: 'border-yellow-500' },
+                { bg: 'bg-green-500', border: 'border-green-500' },
+                { bg: 'bg-purple-500', border: 'border-purple-500' },
               ];
+              // Mock budget for visualization (in real app, this comes from data)
+              const mockBudget = category.amount * 1.2;
+              const percentage = Math.min((Math.abs(category.amount) / mockBudget) * 100, 100);
+
               return (
-                <div key={category.category} className="flex items-center gap-3">
-                  <div className={`w-1 h-8 ${colors[index]} rounded-full`} />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-white">{category.category}</span>
+                <div key={category.category}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-white font-medium">{category.category}</span>
+                    <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-white">
-                        {formatCompactCurrency(category.amount)}
+                        {formatCompactCurrency(Math.abs(category.amount))}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        of {formatCompactCurrency(mockBudget)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                      <span>
-                        {category.budget ? `Budget: ${formatCurrency(category.budget, false)}` : 'No budget set'}
-                      </span>
-                    </div>
+                  </div>
+                  {/* Visual progress bar */}
+                  <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${colors[index].bg} rounded-full transition-all`}
+                      style={{ width: `${percentage}%` }}
+                    />
                   </div>
                 </div>
               );
