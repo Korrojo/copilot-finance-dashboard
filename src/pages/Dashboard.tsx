@@ -7,9 +7,14 @@ import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart'
 import { Sparkline } from '../components/charts/Sparkline';
 import { TimeRangeSelector } from '../components/TimeRangeSelector';
 import { UpcomingBills } from '../components/UpcomingBills';
+import { TransactionsToReview } from '../components/TransactionsToReview';
+import { NextTwoWeeksPreview } from '../components/NextTwoWeeksPreview';
+import { mockTransactions } from '../utils/mockTransactions';
+import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
   const [timeRange, setTimeRange] = useState('1M');
+  const navigate = useNavigate();
 
   const {
     data,
@@ -22,6 +27,16 @@ export function Dashboard() {
   } = useFinancialData();
 
   const { upcomingBills } = useSubscriptions();
+
+  // Generate upcoming items for next two weeks preview
+  const upcomingItems = upcomingBills.slice(0, 10).map(bill => ({
+    id: bill.subscription.id,
+    date: bill.dueDate,
+    name: bill.subscription.merchantName,
+    amount: -bill.estimatedAmount,
+    type: 'bill' as const,
+    category: bill.subscription.category,
+  }));
 
   // Mock sparkline data (in real app, this would come from API based on timeRange)
   const totalSpentSparkline = [45000, 48000, 46000, 50000, 52000, 49000, totalSpent];
@@ -248,6 +263,20 @@ export function Dashboard() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Transactions to Review & Next Two Weeks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <TransactionsToReview
+          transactions={mockTransactions}
+          maxItems={5}
+          onViewAll={() => navigate('/transactions')}
+          onSelectTransaction={(transaction) => {
+            console.log('Selected transaction:', transaction);
+            navigate('/transactions');
+          }}
+        />
+        <NextTwoWeeksPreview upcomingItems={upcomingItems} />
       </div>
 
       {/* Upcoming Bills */}
