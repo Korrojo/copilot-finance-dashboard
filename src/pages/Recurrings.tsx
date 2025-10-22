@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { TrendingUp, DollarSign, AlertCircle, Calendar } from 'lucide-react';
+import { TrendingUp, DollarSign, AlertCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { SubscriptionCard } from '../components/SubscriptionCard';
 import { UpcomingBills } from '../components/UpcomingBills';
+import { RecurringCalendarView } from '../components/RecurringCalendarView';
 
 export function Recurrings() {
   const {
@@ -20,6 +21,7 @@ export function Recurrings() {
 
   const [filter, setFilter] = useState<'all' | 'active' | 'cancelled' | 'paused'>('active');
   const [sortBy, setSortBy] = useState<'amount' | 'name' | 'nextBilling'>('amount');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   // Filter subscriptions
   const filteredSubscriptions = useMemo(() => {
@@ -46,11 +48,36 @@ export function Recurrings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Recurring Payments</h1>
-        <p className="text-gray-400">
-          Manage your subscriptions and recurring transactions
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-2">Recurring Payments</h1>
+          <p className="text-gray-400">
+            Manage your subscriptions and recurring transactions
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'list'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+            }`}
+          >
+            List View
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'calendar'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+            }`}
+          >
+            <CalendarIcon className="w-4 h-4" />
+            Calendar
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -101,9 +128,12 @@ export function Recurrings() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Subscriptions List (2 columns) */}
-        <div className="lg:col-span-2 space-y-6">
+      {viewMode === 'calendar' ? (
+        <RecurringCalendarView upcomingBills={upcomingBills} />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Subscriptions List (2 columns) */}
+          <div className="lg:col-span-2 space-y-6">
           {/* Filters and Sort */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4">
             <div className="flex flex-wrap gap-4 items-center justify-between">
@@ -155,7 +185,7 @@ export function Recurrings() {
             </div>
           ) : (
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-12 text-center">
-              <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <CalendarIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
               <p className="text-gray-400">No subscriptions found</p>
             </div>
           )}
@@ -227,6 +257,7 @@ export function Recurrings() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
