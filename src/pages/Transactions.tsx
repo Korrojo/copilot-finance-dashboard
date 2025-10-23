@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Filter, Search, Download, ChevronRight } from 'lucide-react';
+import { Filter, Search, Download, ChevronRight, Plus } from 'lucide-react';
 import { mockTransactions } from '../utils/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
 import { getRelativeDateLabel } from '../utils/dateHelpers';
@@ -7,6 +7,7 @@ import { TransactionDetailPanel } from '../components/TransactionDetailPanel';
 import { BulkActionToolbar } from '../components/BulkActionToolbar';
 import { FilterChips } from '../components/FilterChips';
 import { StatusBadge } from '../components/StatusBadge';
+import { AddTransactionModal } from '../components/AddTransactionModal';
 import type { Transaction } from '../types';
 import type { TransactionStatus } from '../components/StatusBadge';
 
@@ -22,10 +23,12 @@ const categoryColors: Record<string, string> = {
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'merchant-asc';
 
 export function Transactions() {
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Multi-select state
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<Set<string>>(new Set());
@@ -37,17 +40,17 @@ export function Transactions() {
 
   // Get unique categories and accounts
   const categories = useMemo(() =>
-    Array.from(new Set(mockTransactions.map(t => t.category))).sort(),
-    []
+    Array.from(new Set(transactions.map(t => t.category))).sort(),
+    [transactions]
   );
 
   const accounts = useMemo(() =>
-    Array.from(new Set(mockTransactions.map(t => t.account))).sort(),
-    []
+    Array.from(new Set(transactions.map(t => t.account))).sort(),
+    [transactions]
   );
 
   const filteredTransactions = useMemo(() => {
-    return mockTransactions.filter((transaction) => {
+    return transactions.filter((transaction) => {
       // Search filter
       const matchesSearch =
         transaction.merchant.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -240,7 +243,22 @@ export function Transactions() {
     setSelectedTransactionIds(new Set());
   };
 
-  const selectedTransactionData = mockTransactions.find(t => t.id === selectedTransaction);
+  const handleAddTransaction = (newTransaction: Omit<Transaction, 'id'>) => {
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const transactionWithId: Transaction = {
+      ...newTransaction,
+      id,
+    };
+    setTransactions([transactionWithId, ...transactions]);
+  };
+
+  const handleUpdateTransaction = (updatedTransaction: Transaction) => {
+    setTransactions(transactions.map(t =>
+      t.id === updatedTransaction.id ? updatedTransaction : t
+    ));
+  };
+
+  const selectedTransactionData = transactions.find(t => t.id === selectedTransaction);
 
   return (
     <div className="flex h-full">
@@ -307,10 +325,17 @@ export function Transactions() {
             </select>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0a0e1a] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600"
             >
               <Download className="w-4 h-4" />
               <span>Export</span>
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Transaction</span>
             </button>
           </div>
 
@@ -532,16 +557,11 @@ export function Transactions() {
       {selectedTransaction && selectedTransactionData && (
         <TransactionDetailPanel
           transaction={selectedTransactionData}
-          allTransactions={mockTransactions}
+          allTransactions={transactions}
+          categories={categories}
+          accounts={accounts}
           onClose={() => setSelectedTransaction(null)}
-          onEdit={(transaction) => {
-            console.log('Edit transaction:', transaction);
-            // TODO: Implement edit functionality
-          }}
-          onAddNote={(transactionId) => {
-            console.log('Add note to transaction:', transactionId);
-            // TODO: Implement add note functionality
-          }}
+          onUpdate={handleUpdateTransaction}
           onAddTags={(transactionId) => {
             console.log('Add tags to transaction:', transactionId);
             // TODO: Implement add tags functionality
@@ -549,6 +569,16 @@ export function Transactions() {
           onRecurring={(transactionId) => {
             console.log('Mark as recurring:', transactionId);
             // TODO: Implement recurring transaction functionality
+          }}
+          onMarkReviewed={(transactionId) => {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (transaction) {
+              handleUpdateTransaction({ ...transaction, status: 'cleared' });
+            }
+          }}
+          onSplitTransaction={(transactionId) => {
+            console.log('Split transaction:', transactionId);
+            // TODO: Implement split transaction functionality (Phase 3)
           }}
         />
       )}
@@ -560,6 +590,15 @@ export function Transactions() {
         onDelete={handleBulkDelete}
         onMarkReviewed={handleBulkMarkReviewed}
         onClearSelection={clearSelection}
+      />
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={handleAddTransaction}
+        categories={categories}
+        accounts={accounts}
       />
     </div>
   );
