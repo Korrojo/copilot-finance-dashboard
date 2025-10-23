@@ -10,6 +10,19 @@ export interface Transaction {
   type: 'debit' | 'credit';
   notes?: string;
   tags?: string[];
+  isSplit?: boolean;
+  splitTransactions?: TransactionSplit[];
+  isRecurring?: boolean;
+  recurringId?: string;
+  goalId?: string;
+}
+
+// Split transaction
+export interface TransactionSplit {
+  id: string;
+  category: string;
+  amount: number;
+  notes?: string;
 }
 
 // Category spending
@@ -61,6 +74,17 @@ export interface FinancialData {
   merchant_spending: MerchantSpending[];
   account_spending: AccountSpending[];
   transactions?: Transaction[];
+}
+
+// Goal types
+export interface Goal {
+  id: string;
+  name: string;
+  target: number;
+  current: number;
+  category?: string;
+  deadline?: string;
+  color?: string;
 }
 
 // Page navigation
