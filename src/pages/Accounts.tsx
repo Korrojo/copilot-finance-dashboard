@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Eye, EyeOff, DollarSign, AlertCircle, Plus } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Plus } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import { useAccounts } from '../hooks/useAccounts';
 import { AccountDetailModal } from '../components/AccountDetailModal';
 import { ConnectionStatusCard } from '../components/ConnectionStatusCard';
 import { Sparkline } from '../components/charts/Sparkline';
+import { NetWorthSummary } from '../components/NetWorthSummary';
 import { ACCOUNT_HEALTH_COLORS } from '../types/account';
 import type { DetailedAccount } from '../types/account';
 
@@ -77,59 +78,16 @@ export function Accounts() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">Net Worth</p>
-              <h2 className="text-3xl font-bold text-blue-400">
-                {showBalances ? formatCurrency(netWorth) : '••••••'}
-              </h2>
-            </div>
-            <DollarSign className="w-6 h-6 text-blue-400" />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 font-medium">{netWorthChange.toFixed(2)}%</span>
-            <span className="text-gray-500">vs last month</span>
-          </div>
-        </div>
-
-        <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">Assets</p>
-              <h2 className="text-3xl font-bold text-green-400">
-                {showBalances ? formatCurrency(totalAssets) : '••••••'}
-              </h2>
-            </div>
-            <TrendingUp className="w-6 h-6 text-green-400" />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 font-medium">{assetsChange.toFixed(2)}%</span>
-            <span className="text-gray-500">vs last month</span>
-          </div>
-        </div>
-
-        <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">Liabilities</p>
-              <h2 className="text-3xl font-bold text-red-400">
-                {showBalances ? formatCurrency(totalLiabilities) : '••••••'}
-              </h2>
-            </div>
-            <TrendingDown className="w-6 h-6 text-red-400" />
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <TrendingDown className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 font-medium">{Math.abs(liabilitiesChange).toFixed(2)}%</span>
-            <span className="text-gray-500">vs last month</span>
-          </div>
-        </div>
-      </div>
+      {/* Net Worth Summary with Chart */}
+      <NetWorthSummary
+        netWorth={netWorth}
+        totalAssets={totalAssets}
+        totalLiabilities={totalLiabilities}
+        netWorthChange={netWorthChange}
+        assetsChange={assetsChange}
+        liabilitiesChange={liabilitiesChange}
+        showBalances={showBalances}
+      />
 
       {/* Connections Section (Toggleable) */}
       {showConnections && (
