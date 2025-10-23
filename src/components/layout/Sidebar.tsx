@@ -11,6 +11,7 @@ import {
   Search,
   HelpCircle,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Investments', href: '/investments', icon: BarChart3 },
   { name: 'Categories', href: '/categories', icon: PieChart },
   { name: 'Recurrings', href: '/recurrings', icon: RefreshCw },
+  { name: 'Insights', href: '/insights', icon: Sparkles },
 ];
 
 const accountSections = [
