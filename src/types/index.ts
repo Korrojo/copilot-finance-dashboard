@@ -6,7 +6,7 @@ export interface Transaction {
   category: string;
   account: string;
   amount: number;
-  status: 'pending' | 'posted';
+  status: 'pending' | 'posted' | 'cleared' | 'to_review';
   type: 'debit' | 'credit';
   notes?: string;
   tags?: string[];

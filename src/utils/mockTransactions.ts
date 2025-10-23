@@ -9,7 +9,7 @@ export const mockTransactions: Transaction[] = [
     category: 'Shopping',
     account: 'Amazon Prime',
     amount: -20.27,
-    status: 'posted',
+    status: 'pending',
     type: 'debit',
   },
   {
@@ -19,7 +19,7 @@ export const mockTransactions: Transaction[] = [
     category: 'Shopping',
     account: 'Amazon Business 2002',
     amount: -141.97,
-    status: 'posted',
+    status: 'to_review',
     type: 'debit',
   },
   {
@@ -29,7 +29,7 @@ export const mockTransactions: Transaction[] = [
     category: 'Other',
     account: 'Freedom - Emu 7539',
     amount: -114.99,
-    status: 'posted',
+    status: 'cleared',
     type: 'debit',
   },
   {
@@ -69,7 +69,7 @@ export const mockTransactions: Transaction[] = [
     category: 'Restaurants',
     account: 'Freedom - Emu 7539',
     amount: -115.60,
-    status: 'posted',
+    status: 'pending',
     type: 'debit',
   },
   {
@@ -79,7 +79,7 @@ export const mockTransactions: Transaction[] = [
     category: 'Groceries',
     account: 'Sapphire 6823',
     amount: -24.15,
-    status: 'posted',
+    status: 'cleared',
     type: 'debit',
   },
   {

@@ -2,8 +2,13 @@ import { useState, useMemo } from 'react';
 import { Filter, Search, Download, ChevronRight } from 'lucide-react';
 import { mockTransactions } from '../utils/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
+import { getRelativeDateLabel } from '../utils/dateHelpers';
 import { TransactionDetailPanel } from '../components/TransactionDetailPanel';
+import { BulkActionToolbar } from '../components/BulkActionToolbar';
+import { FilterChips } from '../components/FilterChips';
+import { StatusBadge } from '../components/StatusBadge';
 import type { Transaction } from '../types';
+import type { TransactionStatus } from '../components/StatusBadge';
 
 const categoryColors: Record<string, string> = {
   Shopping: 'bg-pink-500',
@@ -21,6 +26,9 @@ export function Transactions() {
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+
+  // Multi-select state
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<Set<string>>(new Set());
 
   // Filter states
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -88,10 +96,6 @@ export function Transactions() {
     }
   }, [filteredTransactions, sortBy]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
 
   const groupTransactionsByDate = () => {
     const grouped: Record<string, Transaction[]> = {};
@@ -139,6 +143,103 @@ export function Transactions() {
   const hasActiveFilters = selectedCategories.length > 0 || selectedAccounts.length > 0 ||
     amountRange.min !== '' || amountRange.max !== '';
 
+  // Generate filter chips
+  const filterChips = useMemo(() => {
+    const chips: Array<{ id: string; label: string; type: 'category' | 'account' | 'amount'; value: string }> = [];
+
+    selectedCategories.forEach(cat => {
+      chips.push({
+        id: `category-${cat}`,
+        label: cat,
+        type: 'category',
+        value: cat,
+      });
+    });
+
+    selectedAccounts.forEach(acc => {
+      chips.push({
+        id: `account-${acc}`,
+        label: acc,
+        type: 'account',
+        value: acc,
+      });
+    });
+
+    if (amountRange.min || amountRange.max) {
+      const label = amountRange.min && amountRange.max
+        ? `$${amountRange.min} - $${amountRange.max}`
+        : amountRange.min
+        ? `≥ $${amountRange.min}`
+        : `≤ $${amountRange.max}`;
+      chips.push({
+        id: 'amount-range',
+        label,
+        type: 'amount',
+        value: 'range',
+      });
+    }
+
+    return chips;
+  }, [selectedCategories, selectedAccounts, amountRange]);
+
+  const removeFilterChip = (chipId: string) => {
+    if (chipId.startsWith('category-')) {
+      const category = chipId.replace('category-', '');
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    } else if (chipId.startsWith('account-')) {
+      const account = chipId.replace('account-', '');
+      setSelectedAccounts(selectedAccounts.filter(a => a !== account));
+    } else if (chipId === 'amount-range') {
+      setAmountRange({ min: '', max: '' });
+    }
+  };
+
+  // Multi-select handlers
+  const toggleTransactionSelection = (transactionId: string) => {
+    const newSelected = new Set(selectedTransactionIds);
+    if (newSelected.has(transactionId)) {
+      newSelected.delete(transactionId);
+    } else {
+      newSelected.add(transactionId);
+    }
+    setSelectedTransactionIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTransactionIds.size === sortedTransactions.length) {
+      setSelectedTransactionIds(new Set());
+    } else {
+      setSelectedTransactionIds(new Set(sortedTransactions.map(t => t.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedTransactionIds(new Set());
+  };
+
+  // Bulk action handlers
+  const handleBulkCategorize = () => {
+    // TODO: Implement bulk categorize modal
+    console.log('Bulk categorize:', Array.from(selectedTransactionIds));
+    alert(`Categorizing ${selectedTransactionIds.size} transactions (feature coming soon)`);
+  };
+
+  const handleBulkDelete = () => {
+    if (confirm(`Are you sure you want to delete ${selectedTransactionIds.size} transactions?`)) {
+      // TODO: Implement actual delete functionality
+      console.log('Bulk delete:', Array.from(selectedTransactionIds));
+      setSelectedTransactionIds(new Set());
+      alert('Transactions deleted (mock)');
+    }
+  };
+
+  const handleBulkMarkReviewed = () => {
+    // TODO: Implement mark as reviewed functionality
+    console.log('Mark as reviewed:', Array.from(selectedTransactionIds));
+    alert(`Marked ${selectedTransactionIds.size} transactions as reviewed (feature coming soon)`);
+    setSelectedTransactionIds(new Set());
+  };
+
   const selectedTransactionData = mockTransactions.find(t => t.id === selectedTransaction);
 
   return (
@@ -147,8 +248,23 @@ export function Transactions() {
       <div className="flex-1 p-8 overflow-y-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">All transactions</h1>
-          <p className="text-gray-400">{filteredTransactions.length} transactions</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">All transactions</h1>
+              <p className="text-gray-400">{filteredTransactions.length} transactions</p>
+            </div>
+            {filteredTransactions.length > 0 && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTransactionIds.size === sortedTransactions.length && sortedTransactions.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer w-5 h-5"
+                />
+                <span className="text-sm text-gray-400">Select all</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filters Bar */}
@@ -281,25 +397,96 @@ export function Transactions() {
           )}
         </div>
 
+        {/* Filter Chips */}
+        {filterChips.length > 0 && (
+          <div className="mb-6">
+            <FilterChips
+              chips={filterChips}
+              onRemove={removeFilterChip}
+              onClearAll={clearFilters}
+            />
+          </div>
+        )}
+
         {/* Transactions List */}
         <div className="space-y-6">
-          {Object.entries(groupedTransactions).map(([date, transactions]) => (
-            <div key={date}>
-              <div className="text-sm text-gray-500 font-semibold mb-3 uppercase">
-                {formatDate(date)}
-              </div>
+          {Object.entries(groupedTransactions).map(([date, transactions]) => {
+            // Calculate totals for this date group
+            const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+            const income = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const expenses = transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0);
+
+            return (
+              <div key={date}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={transactions.every(t => selectedTransactionIds.has(t.id))}
+                      onChange={() => {
+                        const allSelected = transactions.every(t => selectedTransactionIds.has(t.id));
+                        const newSelected = new Set(selectedTransactionIds);
+                        transactions.forEach(t => {
+                          if (allSelected) {
+                            newSelected.delete(t.id);
+                          } else {
+                            newSelected.add(t.id);
+                          }
+                        });
+                        setSelectedTransactionIds(newSelected);
+                      }}
+                      className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer w-5 h-5"
+                    />
+                    <div className="text-sm text-gray-500 font-semibold uppercase">
+                      {getRelativeDateLabel(date)}
+                    </div>
+                  </div>
+
+                  {/* Date group totals */}
+                  <div className="flex items-center gap-4 text-sm">
+                    {income > 0 && (
+                      <span className="text-green-400 font-medium">
+                        +{formatCurrency(income)}
+                      </span>
+                    )}
+                    {expenses < 0 && (
+                      <span className="text-red-400 font-medium">
+                        {formatCurrency(expenses)}
+                      </span>
+                    )}
+                    {(income > 0 || expenses < 0) && (
+                      <span className="text-gray-600">|</span>
+                    )}
+                    <span className={`font-semibold ${total >= 0 ? 'text-green-400' : 'text-white'}`}>
+                      {formatCurrency(total)}
+                    </span>
+                  </div>
+                </div>
               <div className="bg-[#141824] rounded-xl border border-gray-800 overflow-hidden">
                 {transactions.map((transaction, index) => (
                   <div
                     key={transaction.id}
-                    onClick={() => setSelectedTransaction(transaction.id)}
-                    className={`flex items-center justify-between p-4 hover:bg-[#1a1f2e] cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between p-4 hover:bg-[#1a1f2e] transition-colors ${
                       index !== transactions.length - 1 ? 'border-b border-gray-800' : ''
-                    } ${selectedTransaction === transaction.id ? 'bg-[#1a1f2e]' : ''}`}
+                    } ${selectedTransaction === transaction.id ? 'bg-[#1a1f2e]' : ''} ${
+                      selectedTransactionIds.has(transaction.id) ? 'bg-blue-500/10' : ''
+                    }`}
                   >
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <div className="flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedTransactionIds.has(transaction.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleTransactionSelection(transaction.id);
+                        }}
+                        className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0 w-5 h-5"
+                      />
+                      <div
+                        className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 cursor-pointer"
+                        onClick={() => setSelectedTransaction(transaction.id)}
+                      ></div>
+                      <div className="flex-1 cursor-pointer" onClick={() => setSelectedTransaction(transaction.id)}>
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium">{transaction.merchant}</span>
                           <span
@@ -309,13 +496,14 @@ export function Transactions() {
                           >
                             {transaction.category}
                           </span>
+                          <StatusBadge status={transaction.status as TransactionStatus} />
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
                           {transaction.account}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => setSelectedTransaction(transaction.id)}>
                       <span
                         className={`text-lg font-semibold ${
                           transaction.amount > 0 ? 'text-green-400' : 'text-white'
@@ -329,7 +517,8 @@ export function Transactions() {
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredTransactions.length === 0 && (
@@ -363,6 +552,15 @@ export function Transactions() {
           }}
         />
       )}
+
+      {/* Bulk Action Toolbar */}
+      <BulkActionToolbar
+        selectedCount={selectedTransactionIds.size}
+        onCategorize={handleBulkCategorize}
+        onDelete={handleBulkDelete}
+        onMarkReviewed={handleBulkMarkReviewed}
+        onClearSelection={clearSelection}
+      />
     </div>
   );
 }

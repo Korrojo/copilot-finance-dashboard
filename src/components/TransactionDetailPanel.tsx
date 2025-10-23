@@ -1,6 +1,8 @@
-import { X, Edit2, Tag, FileText, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
+import { X, Edit2, Tag, FileText, Calendar, TrendingUp, TrendingDown, CheckCircle, Split, Repeat } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import { StatusBadge } from './StatusBadge';
 import type { Transaction } from '../types';
+import type { TransactionStatus } from './StatusBadge';
 
 interface TransactionDetailPanelProps {
   transaction: Transaction;
@@ -10,6 +12,8 @@ interface TransactionDetailPanelProps {
   onAddNote?: (transactionId: string) => void;
   onAddTags?: (transactionId: string) => void;
   onRecurring?: (transactionId: string) => void;
+  onMarkReviewed?: (transactionId: string) => void;
+  onSplitTransaction?: (transactionId: string) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -33,6 +37,8 @@ export function TransactionDetailPanel({
   onAddNote,
   onAddTags,
   onRecurring,
+  onMarkReviewed,
+  onSplitTransaction,
 }: TransactionDetailPanelProps) {
   // Find similar transactions (same merchant)
   const similarTransactions = allTransactions
@@ -81,7 +87,39 @@ export function TransactionDetailPanel({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm text-gray-400">{formatDate(transaction.date)}</p>
+        <p className="text-sm text-gray-400 mb-4">{formatDate(transaction.date)}</p>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onMarkReviewed?.(transaction.id)}
+            disabled={transaction.status === 'cleared'}
+            className="flex items-center gap-2 px-3 py-2 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 hover:text-white transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title={transaction.status === 'cleared' ? 'Already reviewed' : 'Mark as reviewed'}
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>Review</span>
+          </button>
+
+          <button
+            onClick={() => onSplitTransaction?.(transaction.id)}
+            className="flex items-center gap-2 px-3 py-2 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 hover:text-white transition-colors text-sm"
+            title="Split this transaction"
+          >
+            <Split className="w-4 h-4" />
+            <span>Split</span>
+          </button>
+
+          <button
+            onClick={() => onRecurring?.(transaction.id)}
+            disabled={similarTransactions.length < 2}
+            className="flex items-center gap-2 px-3 py-2 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 hover:text-white transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title={similarTransactions.length < 2 ? 'Not enough similar transactions' : 'Mark as recurring'}
+          >
+            <Repeat className="w-4 h-4" />
+            <span>Recurring</span>
+          </button>
+        </div>
       </div>
 
       {/* Scrollable Content */}
@@ -128,13 +166,7 @@ export function TransactionDetailPanel({
 
           <div className="flex items-center justify-between py-3 border-b border-gray-800">
             <span className="text-sm text-gray-400">Status</span>
-            <span className={`text-sm px-3 py-1 rounded-full ${
-              transaction.status === 'posted'
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-            }`}>
-              {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-            </span>
+            <StatusBadge status={transaction.status as TransactionStatus} size="md" />
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-800">
