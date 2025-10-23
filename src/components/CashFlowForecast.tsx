@@ -20,6 +20,25 @@ export function CashFlowForecast({ data, currentBalance, savingsRate }: CashFlow
   const monthlyNet = data[data.length - 1]?.projected || 0;
   const runway = monthlyNet < 0 ? Math.floor(currentBalance / Math.abs(monthlyNet)) : null;
 
+  // Transform data to show cumulative balance
+  const balanceData = data.map((month, index) => {
+    let cumulativeNet = 0;
+
+    // Sum up all net income up to this point
+    for (let i = 0; i <= index; i++) {
+      cumulativeNet += (data[i].actual || data[i].projected || 0);
+    }
+
+    const projectedBalance = currentBalance + cumulativeNet;
+
+    return {
+      month: month.month,
+      actualBalance: month.isProjected ? null : projectedBalance,
+      projectedBalance: month.isProjected ? projectedBalance : null,
+      netIncome: month.actual || month.projected || 0,
+    };
+  });
+
   return (
     <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
       <div className="flex items-center justify-between mb-6">
@@ -47,42 +66,47 @@ export function CashFlowForecast({ data, currentBalance, savingsRate }: CashFlow
         </div>
       )}
 
-      {/* 30/60/90 Day Summary */}
+      {/* Projected Balance Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-[#0a0e1a] rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">30 Days</p>
+          <p className="text-xs text-gray-500 mb-1">Next Month</p>
           <p className="text-sm font-semibold text-white">
-            {formatCurrency((data[0]?.projected || 0))}
+            {formatCurrency(currentBalance + (data.find(d => d.isProjected)?.projected || 0))}
           </p>
+          <p className="text-xs text-gray-400 mt-1">Projected Balance</p>
         </div>
         <div className="bg-[#0a0e1a] rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">60 Days</p>
+          <p className="text-xs text-gray-500 mb-1">2 Months</p>
           <p className="text-sm font-semibold text-white">
-            {formatCurrency((data[1]?.projected || 0))}
+            {formatCurrency(currentBalance + (data.filter(d => d.isProjected).slice(0, 2).reduce((sum, d) => sum + (d.projected || 0), 0)))}
           </p>
+          <p className="text-xs text-gray-400 mt-1">Projected Balance</p>
         </div>
         <div className="bg-[#0a0e1a] rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">90 Days</p>
+          <p className="text-xs text-gray-500 mb-1">3 Months</p>
           <p className="text-sm font-semibold text-white">
-            {formatCurrency((data[2]?.projected || 0))}
+            {formatCurrency(currentBalance + (data.filter(d => d.isProjected).reduce((sum, d) => sum + (d.projected || 0), 0)))}
           </p>
+          <p className="text-xs text-gray-400 mt-1">Projected Balance</p>
         </div>
       </div>
 
       {/* Forecast Chart */}
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <LineChart data={balanceData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
             <XAxis
               dataKey="month"
               stroke="#9ca3af"
-              tick={{ fill: '#9ca3af' }}
+              tick={{ fill: '#9ca3af', fontSize: 12 }}
+              axisLine={{ stroke: '#374151' }}
             />
             <YAxis
               stroke="#9ca3af"
-              tick={{ fill: '#9ca3af' }}
+              tick={{ fill: '#9ca3af', fontSize: 12 }}
               tickFormatter={(value) => formatCompactCurrency(value)}
+              axisLine={{ stroke: '#374151' }}
             />
             <Tooltip
               contentStyle={{
@@ -91,25 +115,31 @@ export function CashFlowForecast({ data, currentBalance, savingsRate }: CashFlow
                 borderRadius: '8px',
                 color: '#fff',
               }}
-              formatter={(value: number) => [formatCurrency(value), '']}
+              formatter={(value: number) => [formatCurrency(value), 'Balance']}
             />
-            <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
+            <ReferenceLine y={currentBalance} stroke="#6b7280" strokeDasharray="3 3" label={{ value: 'Current Balance', fill: '#9ca3af', fontSize: 11 }} />
+
+            {/* Historical Balance Line */}
             <Line
               type="monotone"
-              dataKey="actual"
+              dataKey="actualBalance"
               stroke="#3b82f6"
-              strokeWidth={2}
-              dot={{ r: 4 }}
-              name="Actual"
+              strokeWidth={3}
+              dot={{ r: 5, fill: '#3b82f6', stroke: '#141824', strokeWidth: 2 }}
+              connectNulls={false}
+              name="Historical Balance"
             />
+
+            {/* Projected Balance Line */}
             <Line
               type="monotone"
-              dataKey="projected"
+              dataKey="projectedBalance"
               stroke="#8b5cf6"
-              strokeWidth={2}
+              strokeWidth={3}
               strokeDasharray="5 5"
-              dot={{ r: 4 }}
-              name="Projected"
+              dot={{ r: 5, fill: '#8b5cf6', stroke: '#141824', strokeWidth: 2 }}
+              connectNulls={false}
+              name="Projected Balance"
             />
           </LineChart>
         </ResponsiveContainer>
@@ -118,12 +148,16 @@ export function CashFlowForecast({ data, currentBalance, savingsRate }: CashFlow
       {/* Legend */}
       <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-blue-500" />
-          <span>Actual</span>
+          <div className="w-3 h-3 rounded-full bg-blue-500" />
+          <span>Historical Balance</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-purple-500 border-dashed" style={{ borderTop: '2px dashed' }} />
-          <span>Projected</span>
+          <div className="w-3 h-3 rounded-full bg-purple-500" />
+          <span>Projected Balance</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-0.5 bg-gray-500 border-dashed" style={{ borderTop: '2px dashed' }} />
+          <span>Current Balance</span>
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Edit2, Tag, FileText, Calendar, TrendingUp, TrendingDown, CheckCircle, Split, Repeat, Save } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
-import { StatusBadge } from './StatusBadge';
 import { TagSelector } from './TagSelector';
 import { getMostUsedTags } from '../utils/tagHelpers';
 import type { Transaction } from '../types';
@@ -18,19 +17,6 @@ interface TransactionDetailPanelProps {
   onMarkReviewed?: (transactionId: string) => void;
   onSplitTransaction?: (transactionId: string) => void;
 }
-
-const categoryColors: Record<string, string> = {
-  Shopping: 'bg-pink-500',
-  Restaurants: 'bg-green-500',
-  Groceries: 'bg-blue-500',
-  'Auto Misc': 'bg-cyan-500',
-  Utility: 'bg-yellow-500',
-  Other: 'bg-gray-500',
-  'Food & Drink': 'bg-orange-500',
-  Entertainment: 'bg-purple-500',
-  Transportation: 'bg-indigo-500',
-  Healthcare: 'bg-red-500',
-};
 
 export function TransactionDetailPanel({
   transaction,
@@ -50,7 +36,7 @@ export function TransactionDetailPanel({
   useEffect(() => {
     setEditedTransaction(transaction);
     setIsEditing(false);
-  }, [transaction.id]);
+  }, [transaction]);
 
   const handleSave = () => {
     if (onUpdate) {
@@ -141,12 +127,11 @@ export function TransactionDetailPanel({
 
           <button
             onClick={() => onRecurring?.(transaction.id)}
-            disabled={similarTransactions.length < 2}
-            className="flex items-center gap-2 px-3 py-2 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 hover:text-white transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            title={similarTransactions.length < 2 ? 'Not enough similar transactions' : 'Mark as recurring'}
+            className="flex items-center gap-2 px-3 py-2 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 hover:text-white transition-colors text-sm"
+            title={transaction.isRecurring ? 'Remove recurring status' : 'Mark as recurring'}
           >
             <Repeat className="w-4 h-4" />
-            <span>Recurring</span>
+            <span>{transaction.isRecurring ? 'Unmark' : 'Recurring'}</span>
           </button>
         </div>
       </div>
@@ -195,43 +180,37 @@ export function TransactionDetailPanel({
           {/* Category */}
           <div className="flex items-center justify-between py-3 border-b border-gray-800">
             <span className="text-sm text-gray-400">Category</span>
-            {isEditing ? (
-              <select
-                value={editedTransaction.category}
-                onChange={(e) => setEditedTransaction({ ...editedTransaction, category: e.target.value })}
-                className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            ) : (
-              <span
-                className={`text-sm px-3 py-1 rounded-full ${
-                  categoryColors[transaction.category] || 'bg-gray-500'
-                } text-white`}
-              >
-                {transaction.category}
-              </span>
-            )}
+            <select
+              value={transaction.category}
+              onChange={(e) => {
+                if (onUpdate) {
+                  onUpdate({ ...transaction, category: e.target.value });
+                }
+              }}
+              className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500 cursor-pointer hover:border-blue-500"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           {/* Account */}
           <div className="flex items-center justify-between py-3 border-b border-gray-800">
             <span className="text-sm text-gray-400">Account</span>
-            {isEditing ? (
-              <select
-                value={editedTransaction.account}
-                onChange={(e) => setEditedTransaction({ ...editedTransaction, account: e.target.value })}
-                className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-              >
-                {accounts.map((acc) => (
-                  <option key={acc} value={acc}>{acc}</option>
-                ))}
-              </select>
-            ) : (
-              <span className="text-sm text-white font-medium">{transaction.account}</span>
-            )}
+            <select
+              value={transaction.account}
+              onChange={(e) => {
+                if (onUpdate) {
+                  onUpdate({ ...transaction, account: e.target.value });
+                }
+              }}
+              className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500 cursor-pointer hover:border-blue-500"
+            >
+              {accounts.map((acc) => (
+                <option key={acc} value={acc}>{acc}</option>
+              ))}
+            </select>
           </div>
 
           {/* Amount */}
@@ -257,20 +236,20 @@ export function TransactionDetailPanel({
           {/* Status */}
           <div className="flex items-center justify-between py-3 border-b border-gray-800">
             <span className="text-sm text-gray-400">Status</span>
-            {isEditing ? (
-              <select
-                value={editedTransaction.status}
-                onChange={(e) => setEditedTransaction({ ...editedTransaction, status: e.target.value as TransactionStatus })}
-                className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-              >
-                <option value="pending">Pending</option>
-                <option value="posted">Posted</option>
-                <option value="cleared">Cleared</option>
-                <option value="to_review">To Review</option>
-              </select>
-            ) : (
-              <StatusBadge status={transaction.status as TransactionStatus} size="md" />
-            )}
+            <select
+              value={transaction.status}
+              onChange={(e) => {
+                if (onUpdate) {
+                  onUpdate({ ...transaction, status: e.target.value as TransactionStatus });
+                }
+              }}
+              className="px-3 py-1.5 bg-[#0a0e1a] border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-blue-500 cursor-pointer hover:border-blue-500"
+            >
+              <option value="pending">Pending</option>
+              <option value="posted">Posted</option>
+              <option value="cleared">Cleared</option>
+              <option value="to_review">To Review</option>
+            </select>
           </div>
 
           {/* Type */}

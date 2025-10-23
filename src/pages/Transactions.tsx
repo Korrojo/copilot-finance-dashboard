@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Filter, Search, Download, ChevronRight, Plus, Undo2, Redo2 } from 'lucide-react';
+import { Filter, Search, Download, ChevronRight, Plus, Undo2, Redo2, Split } from 'lucide-react';
 import { mockTransactions } from '../utils/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
 import { getRelativeDateLabel } from '../utils/dateHelpers';
@@ -9,6 +9,9 @@ import { FilterChips } from '../components/FilterChips';
 import { StatusBadge } from '../components/StatusBadge';
 import { AddTransactionModal } from '../components/AddTransactionModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { MerchantIcon } from '../components/MerchantIcon';
+import { BulkCategorizeModal } from '../components/BulkCategorizeModal';
+import { SplitTransactionModal } from '../components/SplitTransactionModal';
 import { useUndoStack } from '../hooks/useUndoStack';
 import type { Transaction } from '../types';
 import type { TransactionStatus } from '../components/StatusBadge';
@@ -42,6 +45,9 @@ export function Transactions() {
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBulkCategorizeModal, setShowBulkCategorizeModal] = useState(false);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [transactionToSplit, setTransactionToSplit] = useState<string | null>(null);
 
   // Multi-select state
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<Set<string>>(new Set());
@@ -235,9 +241,18 @@ export function Transactions() {
 
   // Bulk action handlers
   const handleBulkCategorize = () => {
-    // TODO: Implement bulk categorize modal
-    console.log('Bulk categorize:', Array.from(selectedTransactionIds));
-    alert(`Categorizing ${selectedTransactionIds.size} transactions (feature coming soon)`);
+    setShowBulkCategorizeModal(true);
+  };
+
+  const confirmBulkCategorize = (category: string) => {
+    performAction(
+      'update',
+      transactions.map(t =>
+        selectedTransactionIds.has(t.id) ? { ...t, category } : t
+      ),
+      `Categorized ${selectedTransactionIds.size} transaction${selectedTransactionIds.size !== 1 ? 's' : ''} as ${category}`
+    );
+    setSelectedTransactionIds(new Set());
   };
 
   const handleBulkDelete = () => {
@@ -255,9 +270,13 @@ export function Transactions() {
   };
 
   const handleBulkMarkReviewed = () => {
-    // TODO: Implement mark as reviewed functionality
-    console.log('Mark as reviewed:', Array.from(selectedTransactionIds));
-    alert(`Marked ${selectedTransactionIds.size} transactions as reviewed (feature coming soon)`);
+    performAction(
+      'update',
+      transactions.map(t =>
+        selectedTransactionIds.has(t.id) ? { ...t, status: 'cleared' } : t
+      ),
+      `Marked ${selectedTransactionIds.size} transaction${selectedTransactionIds.size !== 1 ? 's' : ''} as reviewed`
+    );
     setSelectedTransactionIds(new Set());
   };
 
@@ -285,7 +304,60 @@ export function Transactions() {
     );
   };
 
+  const handleSplitTransaction = (transactionId: string) => {
+    setTransactionToSplit(transactionId);
+    setShowSplitModal(true);
+  };
+
+  const handleSaveSplit = (splits: any[]) => {
+    if (!transactionToSplit) return;
+
+    const originalTransaction = transactions.find(t => t.id === transactionToSplit);
+    if (!originalTransaction) return;
+
+    // Close modal and panel first to avoid stale state
+    setShowSplitModal(false);
+    setTransactionToSplit(null);
+    setSelectedTransaction(null);
+
+    // Create new transactions from splits
+    const newTransactions: Transaction[] = splits.map((split, index) => ({
+      id: `${Date.now()}-split-${index}-${Math.random().toString(36).substr(2, 9)}`,
+      merchant: `${originalTransaction.merchant} (Split ${index + 1})`,
+      amount: originalTransaction.amount > 0 ? split.amount : -split.amount,
+      date: originalTransaction.date,
+      category: split.category || originalTransaction.category,
+      account: originalTransaction.account,
+      status: originalTransaction.status,
+      type: originalTransaction.type,
+      tags: originalTransaction.tags || [],
+      notes: split.notes || '',
+      isSplit: true,
+    }));
+
+    // Remove original and add split transactions
+    const updatedTransactions = [
+      ...transactions.filter(t => t.id !== transactionToSplit),
+      ...newTransactions,
+    ];
+
+    performAction(
+      'split',
+      updatedTransactions,
+      `Split transaction into ${splits.length} parts`
+    );
+  };
+
+  const handleMarkRecurring = (transactionId: string) => {
+    const transaction = transactions.find(t => t.id === transactionId);
+    if (transaction) {
+      // Toggle recurring status
+      handleUpdateTransaction({ ...transaction, isRecurring: !transaction.isRecurring });
+    }
+  };
+
   const selectedTransactionData = transactions.find(t => t.id === selectedTransaction);
+  const transactionToSplitData = transactions.find(t => t.id === transactionToSplit);
 
   return (
     <div className="flex h-full">
@@ -561,9 +633,11 @@ export function Transactions() {
                         className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0 w-5 h-5"
                       />
                       <div
-                        className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 cursor-pointer"
+                        className="flex-shrink-0 cursor-pointer"
                         onClick={() => setSelectedTransaction(transaction.id)}
-                      ></div>
+                      >
+                        <MerchantIcon merchantName={transaction.merchant} size="sm" />
+                      </div>
                       <div className="flex-1 cursor-pointer" onClick={() => setSelectedTransaction(transaction.id)}>
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium">{transaction.merchant}</span>
@@ -575,6 +649,17 @@ export function Transactions() {
                             {transaction.category}
                           </span>
                           <StatusBadge status={transaction.status as TransactionStatus} />
+                          {transaction.isSplit && (
+                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                              <Split className="w-3 h-3" />
+                              Split
+                            </span>
+                          )}
+                          {transaction.isRecurring && (
+                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                              Recurring
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500 mt-1">
                           {transaction.account}
@@ -615,20 +700,14 @@ export function Transactions() {
           accounts={accounts}
           onClose={() => setSelectedTransaction(null)}
           onUpdate={handleUpdateTransaction}
-          onRecurring={(transactionId) => {
-            console.log('Mark as recurring:', transactionId);
-            // TODO: Implement recurring transaction functionality
-          }}
+          onRecurring={handleMarkRecurring}
           onMarkReviewed={(transactionId) => {
             const transaction = transactions.find(t => t.id === transactionId);
             if (transaction) {
               handleUpdateTransaction({ ...transaction, status: 'cleared' });
             }
           }}
-          onSplitTransaction={(transactionId) => {
-            console.log('Split transaction:', transactionId);
-            // TODO: Implement split transaction functionality (Phase 3)
-          }}
+          onSplitTransaction={handleSplitTransaction}
         />
       )}
 
@@ -667,6 +746,28 @@ export function Transactions() {
           </div>
         }
       />
+
+      {/* Bulk Categorize Modal */}
+      <BulkCategorizeModal
+        isOpen={showBulkCategorizeModal}
+        onClose={() => setShowBulkCategorizeModal(false)}
+        onCategorize={confirmBulkCategorize}
+        categories={categories}
+        selectedCount={selectedTransactionIds.size}
+      />
+
+      {/* Split Transaction Modal */}
+      {showSplitModal && transactionToSplitData && (
+        <SplitTransactionModal
+          isOpen={showSplitModal}
+          transaction={transactionToSplitData}
+          onClose={() => {
+            setShowSplitModal(false);
+            setTransactionToSplit(null);
+          }}
+          onSave={handleSaveSplit}
+        />
+      )}
     </div>
   );
 }
