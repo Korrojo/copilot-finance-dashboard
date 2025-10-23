@@ -8,6 +8,7 @@ import { BulkActionToolbar } from '../components/BulkActionToolbar';
 import { FilterChips } from '../components/FilterChips';
 import { StatusBadge } from '../components/StatusBadge';
 import { AddTransactionModal } from '../components/AddTransactionModal';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { Transaction } from '../types';
 import type { TransactionStatus } from '../components/StatusBadge';
 
@@ -29,6 +30,7 @@ export function Transactions() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Multi-select state
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<Set<string>>(new Set());
@@ -228,12 +230,13 @@ export function Transactions() {
   };
 
   const handleBulkDelete = () => {
-    if (confirm(`Are you sure you want to delete ${selectedTransactionIds.size} transactions?`)) {
-      // TODO: Implement actual delete functionality
-      console.log('Bulk delete:', Array.from(selectedTransactionIds));
-      setSelectedTransactionIds(new Set());
-      alert('Transactions deleted (mock)');
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = () => {
+    setTransactions(transactions.filter(t => !selectedTransactionIds.has(t.id)));
+    setSelectedTransactionIds(new Set());
+    setShowDeleteConfirm(false);
   };
 
   const handleBulkMarkReviewed = () => {
@@ -562,10 +565,6 @@ export function Transactions() {
           accounts={accounts}
           onClose={() => setSelectedTransaction(null)}
           onUpdate={handleUpdateTransaction}
-          onAddTags={(transactionId) => {
-            console.log('Add tags to transaction:', transactionId);
-            // TODO: Implement add tags functionality
-          }}
           onRecurring={(transactionId) => {
             console.log('Mark as recurring:', transactionId);
             // TODO: Implement recurring transaction functionality
@@ -599,6 +598,24 @@ export function Transactions() {
         onAdd={handleAddTransaction}
         categories={categories}
         accounts={accounts}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Delete Transactions"
+        message={`Are you sure you want to delete ${selectedTransactionIds.size} transaction${selectedTransactionIds.size !== 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmVariant="danger"
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        details={
+          <div className="text-sm text-gray-400">
+            <p className="font-medium text-gray-300 mb-2">Selected transactions:</p>
+            <p>{selectedTransactionIds.size} transaction{selectedTransactionIds.size !== 1 ? 's' : ''} will be permanently deleted</p>
+          </div>
+        }
       />
     </div>
   );

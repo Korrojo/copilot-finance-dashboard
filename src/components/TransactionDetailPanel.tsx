@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, Edit2, Tag, FileText, Calendar, TrendingUp, TrendingDown, CheckCircle, Split, Repeat, Save } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import { StatusBadge } from './StatusBadge';
+import { TagSelector } from './TagSelector';
+import { getMostUsedTags } from '../utils/tagHelpers';
 import type { Transaction } from '../types';
 import type { TransactionStatus } from './StatusBadge';
 
@@ -12,7 +14,6 @@ interface TransactionDetailPanelProps {
   accounts: string[];
   onClose: () => void;
   onUpdate?: (transaction: Transaction) => void;
-  onAddTags?: (transactionId: string) => void;
   onRecurring?: (transactionId: string) => void;
   onMarkReviewed?: (transactionId: string) => void;
   onSplitTransaction?: (transactionId: string) => void;
@@ -38,7 +39,6 @@ export function TransactionDetailPanel({
   accounts,
   onClose,
   onUpdate,
-  onAddTags,
   onRecurring,
   onMarkReviewed,
   onSplitTransaction,
@@ -63,6 +63,12 @@ export function TransactionDetailPanel({
     setEditedTransaction(transaction);
     setIsEditing(false);
   };
+
+  // Get available tags from all transactions
+  const availableTags = useMemo(() => {
+    return getMostUsedTags(allTransactions.map(t => t.tags), 20);
+  }, [allTransactions]);
+
   // Find similar transactions (same merchant)
   const similarTransactions = allTransactions
     .filter(t => t.id !== transaction.id && t.merchant === transaction.merchant)
@@ -323,12 +329,19 @@ export function TransactionDetailPanel({
         </div>
 
         {/* Tags */}
-        {transaction.tags && transaction.tags.length > 0 && (
-          <div className="bg-[#141824] rounded-xl p-4 border border-gray-800">
-            <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
-              <Tag className="w-4 h-4" />
-              <span>Tags</span>
-            </div>
+        <div className="bg-[#141824] rounded-xl p-4 border border-gray-800">
+          <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+            <Tag className="w-4 h-4" />
+            <span>Tags</span>
+          </div>
+          {isEditing ? (
+            <TagSelector
+              selectedTags={editedTransaction.tags || []}
+              availableTags={availableTags}
+              onTagsChange={(tags) => setEditedTransaction({ ...editedTransaction, tags })}
+              placeholder="Add tags (press Enter or comma to add)"
+            />
+          ) : transaction.tags && transaction.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {transaction.tags.map((tag, index) => (
                 <span
@@ -339,8 +352,10 @@ export function TransactionDetailPanel({
                 </span>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p className="text-gray-500 text-sm italic">No tags added</p>
+          )}
+        </div>
 
         {/* Similar Transactions */}
         {similarTransactions.length > 0 && (
@@ -441,7 +456,7 @@ export function TransactionDetailPanel({
                 <span>Add Note</span>
               </button>
               <button
-                onClick={() => onAddTags?.(transaction.id)}
+                onClick={() => setIsEditing(true)}
                 className="flex items-center justify-center gap-2 py-2 px-3 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors text-sm"
               >
                 <Tag className="w-4 h-4" />
