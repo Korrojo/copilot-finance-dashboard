@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Filter, Search, Download, ChevronRight, Plus } from 'lucide-react';
+import { Filter, Search, Download, ChevronRight, Plus, Undo2, Redo2 } from 'lucide-react';
 import { mockTransactions } from '../utils/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
 import { getRelativeDateLabel } from '../utils/dateHelpers';
@@ -9,6 +9,7 @@ import { FilterChips } from '../components/FilterChips';
 import { StatusBadge } from '../components/StatusBadge';
 import { AddTransactionModal } from '../components/AddTransactionModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useUndoStack } from '../hooks/useUndoStack';
 import type { Transaction } from '../types';
 import type { TransactionStatus } from '../components/StatusBadge';
 
@@ -24,7 +25,17 @@ const categoryColors: Record<string, string> = {
 type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'merchant-asc';
 
 export function Transactions() {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+  // Undo/Redo stack for transactions
+  const {
+    state: transactions,
+    performAction,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    lastAction,
+  } = useUndoStack<Transaction[]>(mockTransactions);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -234,7 +245,11 @@ export function Transactions() {
   };
 
   const confirmBulkDelete = () => {
-    setTransactions(transactions.filter(t => !selectedTransactionIds.has(t.id)));
+    performAction(
+      'delete',
+      transactions.filter(t => !selectedTransactionIds.has(t.id)),
+      `Deleted ${selectedTransactionIds.size} transaction${selectedTransactionIds.size !== 1 ? 's' : ''}`
+    );
     setSelectedTransactionIds(new Set());
     setShowDeleteConfirm(false);
   };
@@ -252,13 +267,22 @@ export function Transactions() {
       ...newTransaction,
       id,
     };
-    setTransactions([transactionWithId, ...transactions]);
+    performAction(
+      'add',
+      [transactionWithId, ...transactions],
+      `Added transaction: ${newTransaction.merchant}`
+    );
   };
 
   const handleUpdateTransaction = (updatedTransaction: Transaction) => {
-    setTransactions(transactions.map(t =>
-      t.id === updatedTransaction.id ? updatedTransaction : t
-    ));
+    const oldTransaction = transactions.find(t => t.id === updatedTransaction.id);
+    performAction(
+      'update',
+      transactions.map(t =>
+        t.id === updatedTransaction.id ? updatedTransaction : t
+      ),
+      `Updated transaction: ${oldTransaction?.merchant || 'Unknown'}`
+    );
   };
 
   const selectedTransactionData = transactions.find(t => t.id === selectedTransaction);
@@ -275,14 +299,40 @@ export function Transactions() {
               <p className="text-gray-400">{filteredTransactions.length} transactions</p>
             </div>
             {filteredTransactions.length > 0 && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedTransactionIds.size === sortedTransactions.length && sortedTransactions.length > 0}
-                  onChange={toggleSelectAll}
-                  className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer w-5 h-5"
-                />
-                <span className="text-sm text-gray-400">Select all</span>
+              <div className="flex items-center gap-4">
+                {/* Undo/Redo Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={undo}
+                    disabled={!canUndo}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                    title={canUndo && lastAction ? `Undo: ${lastAction.description}` : 'Nothing to undo (Cmd+Z)'}
+                  >
+                    <Undo2 className="w-4 h-4" />
+                    <span>Undo</span>
+                  </button>
+                  <button
+                    onClick={redo}
+                    disabled={!canRedo}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141824] text-gray-300 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+                    title="Redo (Cmd+Shift+Z)"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                    <span>Redo</span>
+                  </button>
+                </div>
+
+                <div className="w-px h-6 bg-gray-700"></div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedTransactionIds.size === sortedTransactions.length && sortedTransactions.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded border-gray-700 bg-[#0a0e1a] text-blue-600 focus:ring-blue-500 cursor-pointer w-5 h-5"
+                  />
+                  <span className="text-sm text-gray-400">Select all</span>
+                </div>
               </div>
             )}
           </div>
