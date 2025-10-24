@@ -107,11 +107,19 @@ export function SpendingComparisonCard({ data, title = 'Spending' }: SpendingCom
             <Legend
               wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
               iconType="line"
-              formatter={(value) => (
-                <span className="text-gray-400">
-                  {value === 'thisYear' ? 'This month' : 'Last year'}
-                </span>
-              )}
+              formatter={(value) => {
+                const labels = {
+                  'this month vs. last year': { thisYear: 'This month', lastYear: 'Last year' },
+                  'this month vs. last month': { thisYear: 'This month', lastYear: 'Last month' },
+                  'this year vs. last year': { thisYear: 'This year', lastYear: 'Last year' },
+                };
+                const label = labels[comparison as keyof typeof labels] || labels['this month vs. last year'];
+                return (
+                  <span className="text-gray-400">
+                    {value === 'thisYear' ? label.thisYear : label.lastYear}
+                  </span>
+                );
+              }}
             />
             <Area
               type="monotone"

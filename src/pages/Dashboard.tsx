@@ -162,7 +162,11 @@ export function Dashboard() {
                 out of {formatCurrency(budgetAmount, false)} budgeted
               </p>
             </div>
-            <button className="text-gray-400 hover:text-white">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="View transactions"
+            >
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>
@@ -200,7 +204,11 @@ export function Dashboard() {
                 {formatCurrency(totalSpent)}
               </h2>
             </div>
-            <button className="text-gray-400 hover:text-white">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="View transactions"
+            >
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>
@@ -235,7 +243,11 @@ export function Dashboard() {
                 {formatCurrency(avgTransaction)}
               </h2>
             </div>
-            <button className="text-gray-400 hover:text-white">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="text-gray-400 hover:text-white transition-colors"
+              title="View transactions"
+            >
               <ArrowUpRight className="w-5 h-5" />
             </button>
           </div>
@@ -296,7 +308,10 @@ export function Dashboard() {
             <h3 className="text-lg font-semibold text-white">
               Monthly spending
             </h3>
-            <button className="text-blue-400 text-sm hover:text-blue-300">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="text-blue-400 text-sm hover:text-blue-300 transition-colors"
+            >
               TRANSACTIONS →
             </button>
           </div>
@@ -307,7 +322,10 @@ export function Dashboard() {
         <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white">Top categories</h3>
-            <button className="text-blue-400 text-sm hover:text-blue-300">
+            <button
+              onClick={() => navigate('/categories')}
+              className="text-blue-400 text-sm hover:text-blue-300 transition-colors"
+            >
               VIEW ALL →
             </button>
           </div>
