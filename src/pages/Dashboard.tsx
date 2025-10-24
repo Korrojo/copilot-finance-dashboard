@@ -3,6 +3,7 @@ import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { useAccounts } from '../hooks/useAccounts';
+import { useGoals } from '../hooks/useGoals';
 import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
 import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart';
 import { Sparkline } from '../components/charts/Sparkline';
@@ -29,6 +30,7 @@ export function Dashboard() {
 
   const { upcomingBills } = useSubscriptions();
   const { netWorth } = useAccounts();
+  const { goals } = useGoals();
 
   // Generate upcoming items for next two weeks preview
   const upcomingItems = upcomingBills.slice(0, 10).map(bill => ({
@@ -92,39 +94,6 @@ export function Dashboard() {
     }));
   }, []);
 
-  // Mock data for Goals
-  const mockGoals = useMemo(() => [
-    {
-      id: 'goal-1',
-      name: 'Emergency Fund',
-      icon: 'home',
-      current: 7500,
-      target: 15000,
-      percentage: 50,
-      monthlyChange: 500,
-      category: 'Savings',
-    },
-    {
-      id: 'goal-2',
-      name: 'Vacation Fund',
-      icon: 'plane',
-      current: 2400,
-      target: 5000,
-      percentage: 48,
-      monthlyChange: -150,
-      category: 'Travel',
-    },
-    {
-      id: 'goal-3',
-      name: 'Down Payment',
-      icon: 'home',
-      current: 45000,
-      target: 60000,
-      percentage: 75,
-      monthlyChange: 2000,
-      category: 'Housing',
-    },
-  ], []);
 
   // Mock sparkline data (in real app, this would come from API based on timeRange)
   const totalSpentSparkline = [45000, 48000, 46000, 50000, 52000, 49000, totalSpent];
@@ -295,7 +264,7 @@ export function Dashboard() {
           title="Spending"
         />
         <GoalsPreview
-          goals={mockGoals}
+          goals={goals}
           onViewAll={() => navigate('/goals')}
         />
       </div>

@@ -8,6 +8,7 @@ import { Investments } from './pages/Investments';
 import { Categories } from './pages/Categories';
 import { Recurrings } from './pages/Recurrings';
 import { Insights } from './pages/Insights';
+import { Goals } from './pages/Goals';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 function AppContent() {
@@ -24,8 +25,7 @@ function AppContent() {
         <Route path="categories" element={<Categories />} />
         <Route path="recurrings" element={<Recurrings />} />
         <Route path="insights" element={<Insights />} />
-        {/* Placeholder routes */}
-        <Route path="goals" element={<div className="p-8 text-white">Goals coming soon</div>} />
+        <Route path="goals" element={<Goals />} />
       </Route>
     </Routes>
   );
