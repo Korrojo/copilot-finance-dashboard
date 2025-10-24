@@ -1,32 +1,34 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { useFinancialData } from '../hooks/useFinancialData';
 import { useSubscriptions } from '../hooks/useSubscriptions';
+import { useAccounts } from '../hooks/useAccounts';
 import { formatCurrency, formatCompactCurrency } from '../utils/formatCurrency';
 import { MonthlySpendingChart } from '../components/charts/MonthlySpendingChart';
 import { Sparkline } from '../components/charts/Sparkline';
-import { TimeRangeSelector } from '../components/TimeRangeSelector';
 import { UpcomingBills } from '../components/UpcomingBills';
 import { TransactionsToReview } from '../components/TransactionsToReview';
 import { NextTwoWeeksPreview } from '../components/NextTwoWeeksPreview';
+import { NetWorthCard } from '../components/NetWorthCard';
+import { BudgetBreakdownCard } from '../components/BudgetBreakdownCard';
+import { SpendingComparisonCard } from '../components/SpendingComparisonCard';
+import { GoalsPreview } from '../components/GoalsPreview';
 import { mockTransactions } from '../utils/mockTransactions';
 import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
-  const [timeRange, setTimeRange] = useState('1M');
   const navigate = useNavigate();
 
   const {
     data,
     totalSpent,
     avgTransaction,
-    topMerchant,
-    primaryAccount,
     latestMonthSpending,
     topCategories,
   } = useFinancialData();
 
   const { upcomingBills } = useSubscriptions();
+  const { netWorth } = useAccounts();
 
   // Generate upcoming items for next two weeks preview
   const upcomingItems = upcomingBills.slice(0, 10).map(bill => ({
@@ -38,12 +40,98 @@ export function Dashboard() {
     category: bill.subscription.category,
   }));
 
+  // Mock data for Net Worth Card
+  const netWorthHistory = useMemo(() => {
+    const months = ['Feb 28', 'Mar 3', 'Mar 6', 'Mar 9', 'Mar 12', 'Mar 15', 'Mar 18', 'Mar 21', 'Mar 24', 'Mar 27', 'Mar 28'];
+    const baseNetWorth = 250000;
+    return months.map((month, index) => ({
+      date: month,
+      value: baseNetWorth + (index * 5000) + (Math.random() * 10000 - 5000),
+    }));
+  }, []);
+
+  const netWorthChange = netWorthHistory[netWorthHistory.length - 1].value - netWorthHistory[0].value;
+  const netWorthChangePercentage = (netWorthChange / netWorthHistory[0].value) * 100;
+
+  // Mock data for Budget Breakdown
+  const budgetCategories = useMemo(() => [
+    {
+      name: 'Fixed' as const,
+      budget: 8000,
+      spent: 7200,
+      remaining: 800,
+      percentage: 90,
+      status: 'under' as const,
+    },
+    {
+      name: 'Flexible' as const,
+      budget: 6000,
+      spent: 6500,
+      remaining: -500,
+      percentage: 108,
+      status: 'over' as const,
+    },
+    {
+      name: 'Non-Monthly' as const,
+      budget: 4000,
+      spent: 4200,
+      remaining: -200,
+      percentage: 105,
+      status: 'over' as const,
+    },
+  ], []);
+
+  // Mock data for Spending Comparison
+  const spendingComparisonData = useMemo(() => {
+    const days = ['Day 3', 'Day 6', 'Day 9', 'Day 12', 'Day 15', 'Day 18', 'Day 21', 'Day 24', 'Day 27', 'Day 31'];
+    return days.map((day, index) => ({
+      day,
+      date: day,
+      thisYear: 2000 + (index * 500) + (Math.random() * 1000),
+      lastYear: 1500 + (index * 450) + (Math.random() * 800),
+    }));
+  }, []);
+
+  // Mock data for Goals
+  const mockGoals = useMemo(() => [
+    {
+      id: 'goal-1',
+      name: 'Emergency Fund',
+      icon: 'home',
+      current: 7500,
+      target: 15000,
+      percentage: 50,
+      monthlyChange: 500,
+      category: 'Savings',
+    },
+    {
+      id: 'goal-2',
+      name: 'Vacation Fund',
+      icon: 'plane',
+      current: 2400,
+      target: 5000,
+      percentage: 48,
+      monthlyChange: -150,
+      category: 'Travel',
+    },
+    {
+      id: 'goal-3',
+      name: 'Down Payment',
+      icon: 'home',
+      current: 45000,
+      target: 60000,
+      percentage: 75,
+      monthlyChange: 2000,
+      category: 'Housing',
+    },
+  ], []);
+
   // Mock sparkline data (in real app, this would come from API based on timeRange)
   const totalSpentSparkline = [45000, 48000, 46000, 50000, 52000, 49000, totalSpent];
   const avgTransactionSparkline = [150, 155, 148, 160, 158, 155, avgTransaction];
 
   // Calculate budget-related values (using latest month spending as reference)
-  const budgetAmount = 8000; // TODO: Make this configurable
+  const budgetAmount = 18000; // Realistic monthly budget based on spending patterns
   const budgetUsed = latestMonthSpending;
   const budgetLeft = budgetAmount - budgetUsed;
   const budgetPercentage = Math.min((budgetUsed / budgetAmount) * 100, 100);
@@ -55,12 +143,9 @@ export function Dashboard() {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">Your financial overview</p>
-        </div>
-        <TimeRangeSelector selectedRange={timeRange} onRangeChange={setTimeRange} />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+        <p className="text-gray-400">Your financial overview</p>
       </div>
 
       {/* Stats Grid */}
@@ -177,29 +262,30 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Top Merchant Card */}
-        <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">Top Merchant</p>
-              <h3 className="text-2xl font-bold text-white">{topMerchant}</h3>
-              <p className="text-sm text-gray-500 mt-1">Most frequent</p>
-            </div>
-          </div>
-        </div>
+      {/* Budget & Net Worth Row - Monarch Money Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <BudgetBreakdownCard
+          categories={budgetCategories}
+          month="March 2025"
+        />
+        <NetWorthCard
+          netWorth={netWorth}
+          change={netWorthChange}
+          changePercentage={netWorthChangePercentage}
+          history={netWorthHistory}
+        />
+      </div>
 
-        {/* Primary Account Card */}
-        <div className="bg-[#141824] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">Primary Account</p>
-              <h3 className="text-2xl font-bold text-white">{primaryAccount}</h3>
-              <p className="text-sm text-gray-500 mt-1">Most used</p>
-            </div>
-          </div>
-        </div>
+      {/* Spending Comparison & Goals */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <SpendingComparisonCard
+          data={spendingComparisonData}
+          title="Spending"
+        />
+        <GoalsPreview
+          goals={mockGoals}
+          onViewAll={() => navigate('/goals')}
+        />
       </div>
 
       {/* Charts Row */}
