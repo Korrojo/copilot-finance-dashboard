@@ -131,7 +131,7 @@ export function Dashboard() {
   const avgTransactionSparkline = [150, 155, 148, 160, 158, 155, avgTransaction];
 
   // Calculate budget-related values (using latest month spending as reference)
-  const budgetAmount = 18000; // Realistic monthly budget based on spending patterns
+  const budgetAmount = 55000; // Realistic monthly budget based on spending patterns
   const budgetUsed = latestMonthSpending;
   const budgetLeft = budgetAmount - budgetUsed;
   const budgetPercentage = Math.min((budgetUsed / budgetAmount) * 100, 100);
