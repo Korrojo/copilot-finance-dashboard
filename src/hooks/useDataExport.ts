@@ -62,7 +62,7 @@ export function useDataExport() {
           const content = e.target?.result as string;
           const imported = JSON.parse(content);
           resolve(imported);
-        } catch (error) {
+        } catch {
           reject(new Error('Invalid JSON file'));
         }
       };
@@ -90,7 +90,7 @@ export function useDataExport() {
           });
 
           resolve(transactions);
-        } catch (error) {
+        } catch {
           reject(new Error('Invalid CSV file'));
         }
       };

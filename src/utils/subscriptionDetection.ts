@@ -103,7 +103,7 @@ function analyzeTemporalPattern(transactions: Transaction[]): RecurringPattern |
 
   // Determine frequency based on average interval
   let frequency: RecurringPattern['frequency'];
-  let interval = 1;
+  const interval = 1;
 
   if (avgInterval <= 2) {
     frequency = 'daily';

@@ -42,8 +42,9 @@ export async function measurePerformanceAsync<T>(
  * Log render count (useful for debugging unnecessary re-renders)
  */
 export function useRenderCount(componentName: string): void {
+  const renderCount = React.useRef(0);
+
   if (process.env.NODE_ENV === 'development') {
-    const renderCount = React.useRef(0);
     renderCount.current += 1;
     console.log(`[Render] ${componentName}: ${renderCount.current}`);
   }

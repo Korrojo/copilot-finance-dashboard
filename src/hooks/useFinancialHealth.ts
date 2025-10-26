@@ -58,7 +58,7 @@ export function useFinancialHealth(): FinancialHealthData {
 
     // Calculate emergency fund from savings accounts
     const savingsAccounts = accounts.filter(acc =>
-      acc.type === 'depository' &&
+      acc.type === 'debit' &&
       (acc.name.toLowerCase().includes('saving') || acc.name.toLowerCase().includes('emergency'))
     );
     const emergencyFund = savingsAccounts.reduce((sum, acc) => sum + acc.balance, 0);

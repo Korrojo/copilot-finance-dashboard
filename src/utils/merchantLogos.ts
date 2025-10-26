@@ -111,6 +111,7 @@ export function getMerchantInitials(merchantName: string): string {
  * Get merchant logo URL (if available)
  * In production, this would call an API like Clearbit Logo API
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getMerchantLogoUrl(_merchantName: string): string | null {
   // For now, return null - in production, implement API call
   // Example: `https://logo.clearbit.com/${domain}`

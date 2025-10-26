@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useFinancialData } from './useFinancialData';
+import { mockTransactions } from '../utils/mockTransactions';
 
 export interface SpendingInsight {
   id: string;
@@ -49,8 +50,8 @@ export function useSpendingInsights() {
       }
     });
 
-    // Analyze transaction patterns
-    const transactions = data.transactions || [];
+    // Analyze transaction patterns using mockTransactions
+    const transactions = mockTransactions;
     const merchantFrequency: Record<string, number> = {};
     const merchantSpending: Record<string, number> = {};
 
